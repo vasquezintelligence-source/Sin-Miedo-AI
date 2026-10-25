@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin Miedo AI — QC Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg-void: #050810;
+      --bg-deep: #080c16;
+      --bg-primary: #0b1121;
+      --bg-secondary: #0f1729;
+      --bg-card: #121c30;
+      --bg-card-hover: #162240;
+      --bg-input: #0d1525;
+      --bg-glass: rgba(12, 20, 38, 0.7);
+      --text-primary: #e4eaf6;
+      --text-secondary: #7e92b4;
+      --text-muted: #3d516e;
+      --text-dim: #243050;
+      --accent: #38bdf8;
+      --accent-bright: #7dd3fc;
+      --accent-dim: #0c4a6e;
+      --accent-glow: rgba(56, 189, 248, 0.08);
+      --accent-glow-strong: rgba(56, 189, 248, 0.2);
+      --accent-border: rgba(56, 189, 248, 0.2);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.12);
+      --green: #22c55e;
+      --green-glow: rgba(34, 197, 94, 0.12);
+      --yellow: #eab308;
+      --yellow-glow: rgba(234, 179, 8, 0.1);
+      --red: #ef4444;
+      --red-glow: rgba(239, 68, 68, 0.1);
+      --orange: #f97316;
+      --orange-glow: rgba(249, 115, 22, 0.1);
+      --violet: #8b5cf6;
+      --violet-glow: rgba(139, 92, 246, 0.1);
+      --border: rgba(56, 189, 248, 0.06);
+      --border-subtle: rgba(255,255,255, 0.04);
+      --border-accent: rgba(56, 189, 248, 0.15);
+      --border-glow: rgba(56, 189, 248, 0.3);
+      --sidebar-w: 260px;
+      --topbar-h: 52px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-void); color: var(--text-primary); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; }
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+    .app { display: flex; height: 100vh; position: relative; z-index: 1; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--bg-glass); backdrop-filter: blur(30px) saturate(1.3); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-brand { padding: 18px 18px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 11px; }
+    .brand-logo { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), var(--cyan)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: var(--bg-void); box-shadow: 0 0 20px rgba(56, 189, 248, 0.25); }
+    .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .brand-sub { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); opacity: 0.7; }
+    .job-selector { margin: 14px 14px 6px; background: rgba(56, 189, 248, 0.04); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
+    .job-selector:hover { background: rgba(56, 189, 248, 0.08); border-color: var(--border-glow); }
+    .job-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pg 2s infinite; }
+    @keyframes pg { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .job-id { font-size: 13px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.5px; }
+    .job-client { font-size: 10px; color: var(--text-muted); margin-left: auto; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ai-status { margin: 8px 14px 4px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.06), rgba(6, 182, 212, 0.04)); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 11px; }
+    .ai-pulse { width: 20px; height: 20px; background: linear-gradient(135deg, var(--accent), var(--cyan)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--bg-void); animation: ab 3s ease-in-out infinite; }
+    @keyframes ab { 0%,100%{box-shadow:0 0 8px rgba(56,189,248,0.3);} 50%{box-shadow:0 0 20px rgba(56,189,248,0.6);} }
+    .ai-status-text { color: var(--text-secondary); font-weight: 500; }
+    .ai-status-label { color: var(--green); font-weight: 700; font-size: 10px; margin-left: auto; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .nav-section { padding: 10px 0 4px; }
+    .nav-section-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); padding: 0 18px; margin-bottom: 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; cursor: pointer; color: var(--text-secondary); font-size: 13px; font-weight: 500; transition: all 0.15s; position: relative; text-decoration: none; border-left: 2px solid transparent; margin: 1px 0; }
+    .nav-item:hover { color: var(--text-primary); background: rgba(56,189,248,0.04); }
+    .nav-item.active { color: var(--accent-bright); background: linear-gradient(90deg, rgba(56,189,248,0.1), transparent); border-left-color: var(--accent); font-weight: 600; }
+    .nav-icon { font-size: 15px; width: 20px; text-align: center; opacity: 0.7; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .nav-badge { margin-left: auto; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 9999px; }
+    .nb-r { background: var(--red-glow); color: var(--red); }
+    .nb-g { background: var(--green-glow); color: var(--green); }
+    .nb-b { background: var(--accent-glow); color: var(--accent); }
+    .nb-y { background: var(--yellow-glow); color: var(--yellow); }
+
+    .sidebar-footer { margin-top: auto; padding: 14px; border-top: 1px solid var(--border); }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 6px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #1e40af, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; box-shadow: 0 0 12px rgba(124, 58, 246, 0.2); }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-role { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: var(--topbar-h); min-height: var(--topbar-h); background: var(--bg-glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-sep { width: 1px; height: 20px; background: var(--border-subtle); margin: 0 4px; }
+    .topbar-time { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); font-weight: 500; }
+    .search-wrapper { position: relative; margin-left: auto; }
+    .search-wrapper::before { content: '⌘K'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 10px; font-family: var(--font-mono); font-weight: 600; background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-subtle); pointer-events: none; }
+    .search-box { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 50px 7px 14px; font-size: 12px; color: var(--text-primary); width: 260px; outline: none; font-family: inherit; transition: border-color 0.2s; }
+    .search-box::placeholder { color: var(--text-dim); }
+    .search-box:focus { border-color: var(--accent-border); }
+    .topbar-actions { display: flex; gap: 6px; }
+    .topbar-btn { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 14px; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .topbar-btn:hover { color: var(--text-primary); border-color: var(--border-accent); }
+    .topbar-btn.primary { background: linear-gradient(135deg, var(--accent), var(--cyan)); border-color: transparent; color: var(--bg-void); font-weight: 700; box-shadow: 0 0 16px rgba(56, 189, 248, 0.2); }
+    .topbar-btn.primary:hover { opacity: 0.9; }
+
+    .page { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+    .page.active { display: block; }
+
+    /* KPI */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; position: relative; overflow: hidden; transition: all 0.2s; }
+    .kpi:hover { border-color: var(--border-accent); }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; }
+    .kpi.cb::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+    .kpi.cg::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .kpi.cy::before { background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
+    .kpi.cr::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+    .kpi.cc::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+    .kpi.cv::before { background: linear-gradient(90deg, transparent, var(--violet), transparent); }
+    .kpi-glow { position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; border-radius: 50%; filter: blur(50px); opacity: 0.12; pointer-events: none; }
+    .kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .kpi-value { font-size: 30px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; margin-bottom: 4px; }
+    .vb { color: var(--accent); } .vg { color: var(--green); } .vy { color: var(--yellow); } .vr { color: var(--red); } .vc { color: var(--cyan); } .vv { color: var(--violet); }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .kpi-bar { margin-top: 10px; height: 3px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
+    .kpi-bar-fill { height: 100%; border-radius: 2px; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* TABLE */
+    .tc { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 20px; }
+    .th { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); gap: 10px; }
+    .tt { font-size: 13px; font-weight: 700; }
+    .tcnt { font-size: 10px; font-weight: 700; background: var(--accent-glow); color: var(--accent); padding: 2px 8px; border-radius: 9999px; border: 1px solid var(--accent-border); }
+    .tf { margin-left: auto; display: flex; gap: 4px; }
+    .fb { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .fb:hover, .fb.on { color: var(--accent); border-color: var(--accent-border); background: var(--accent-glow); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead { background: rgba(0,0,0,0.25); }
+    th { padding: 8px 14px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.02); color: var(--text-secondary); }
+    tr:hover td { background: rgba(56,189,248,0.02); }
+    .tid { font-weight: 700; color: var(--accent); font-family: var(--font-mono); font-size: 11px; }
+    .tdb { font-weight: 600; color: var(--text-primary); }
+    .tmono { font-family: var(--font-mono); font-size: 11px; }
+
+    /* BADGES */
+    .b { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 9999px; font-size: 10px; font-weight: 700; }
+    .b::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .bo { background: var(--accent-glow); color: var(--accent); } .bo::before { background: var(--accent); }
+    .bp { background: var(--yellow-glow); color: var(--yellow); } .bp::before { background: var(--yellow); }
+    .bd { background: var(--green-glow); color: var(--green); } .bd::before { background: var(--green); }
+    .bh { background: var(--red-glow); color: var(--red); } .bh::before { background: var(--red); }
+    .ba { background: var(--violet-glow); color: var(--violet); } .ba::before { background: var(--violet); animation: pg 1.5s infinite; }
+    .bpn { background: var(--orange-glow); color: var(--orange); } .bpn::before { background: var(--orange); }
+
+    /* PROGRESS */
+    .pi { display: flex; align-items: center; gap: 8px; }
+    .pt { flex: 1; height: 5px; background: rgba(255,255,255,0.04); border-radius: 3px; overflow: hidden; min-width: 50px; }
+    .pf { height: 100%; border-radius: 3px; }
+    .pp { font-size: 11px; font-weight: 800; min-width: 32px; text-align: right; font-family: var(--font-mono); }
+
+    /* AI PANEL */
+    .ap { background: linear-gradient(135deg, rgba(56,189,248,0.04), rgba(139,92,246,0.04)); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .ap::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), var(--violet), var(--cyan)); }
+    .aph { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .api { width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--bg-void); box-shadow: 0 0 12px rgba(56,189,248,0.2); }
+    .apt { font-size: 12px; font-weight: 700; color: var(--accent-bright); }
+    .aptag { margin-left: auto; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--violet); background: var(--violet-glow); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(139,92,246,0.2); }
+    .ai-ins { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .ai-ins:last-child { border-bottom: none; padding-bottom: 0; }
+    .ai-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; min-width: 6px; }
+    .cm { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; }
+    .cmb { width: 40px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; display: inline-block; }
+    .cmf { height: 100%; border-radius: 2px; display: block; }
+
+    /* GRIDS */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .g23 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+    /* CHART */
+    .cb2 { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; overflow: hidden; }
+    .ctl { font-size: 12px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .bchart { display: flex; align-items: flex-end; gap: 6px; height: 110px; }
+    .bcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+    .bar2 { width: 100%; border-radius: 4px 4px 0 0; transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1); min-height: 2px; position: relative; }
+    .bar2::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.3); }
+    .blbl { font-size: 9px; color: var(--text-dim); font-weight: 600; font-family: var(--font-mono); }
+    .bval { font-size: 9px; color: var(--text-muted); font-weight: 700; font-family: var(--font-mono); }
+
+    /* FEED */
+    .feed { display: flex; flex-direction: column; }
+    .fi { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+    .fi:last-child { border: none; }
+    .fdot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; min-width: 7px; }
+    .ftxt { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .ftxt strong { color: var(--text-primary); font-weight: 600; }
+    .ftime { font-size: 10px; color: var(--text-dim); font-weight: 500; margin-top: 2px; font-family: var(--font-mono); }
+
+    /* HANDOVER */
+    .hcard { background: linear-gradient(135deg, rgba(234,179,8,0.04), rgba(249,115,22,0.04)); border: 1px solid rgba(234,179,8,0.15); border-radius: var(--radius-md); padding: 16px 18px; }
+    .htitle { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; color: var(--yellow); }
+    .hitem { font-size: 12px; color: var(--text-secondary); padding: 4px 0; display: flex; gap: 6px; align-items: baseline; }
+    .hitem::before { content: '▸'; color: var(--yellow); font-size: 10px; }
+
+    /* SCAN */
+    .sv { background: var(--bg-void); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 20px; position: relative; overflow: hidden; }
+    .sv::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(56,189,248,0.02) 3px, rgba(56,189,248,0.02) 4px); pointer-events: none; }
+    .svh { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; position: relative; z-index: 1; }
+    .svl { font-size: 11px; font-weight: 700; font-family: var(--font-mono); color: var(--accent); }
+    .svm { font-size: 10px; color: var(--text-dim); margin-left: auto; font-family: var(--font-mono); }
+    .sg { display: grid; grid-template-columns: repeat(24, 1fr); gap: 1px; height: 80px; position: relative; z-index: 1; }
+    .sgc { display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+    .sgcl { width: 100%; aspect-ratio: 1; border-radius: 1px; }
+    .sfinds { margin-top: 14px; display: flex; gap: 10px; position: relative; z-index: 1; }
+    .sfnd { border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px; flex: 1; }
+    .sfnd.r { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); }
+    .sfnd.g { background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); }
+    .sfl { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .sfv { color: var(--text-secondary); }
+
+    /* CODE CARDS */
+    .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .ccard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .ccard:hover { border-color: var(--border-accent); transform: translateY(-1px); }
+    .cctag { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: inline-block; padding: 2px 8px; border-radius: 4px; }
+    .ccard h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .ccard p { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+    /* AI CHAT */
+    .ai-msg { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+    .ai-av { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: var(--bg-void); min-width: 30px; box-shadow: 0 0 14px rgba(56,189,248,0.15); }
+    .ai-bub { background: var(--bg-card); border: 1px solid var(--border); border-radius: 2px var(--radius-md) var(--radius-md) var(--radius-md); padding: 14px 16px; font-size: 13px; line-height: 1.7; color: var(--text-secondary); max-width: 560px; }
+    .ai-bub strong { color: var(--text-primary); }
+    .ai-bub code { font-family: var(--font-mono); font-size: 11px; background: rgba(56,189,248,0.08); color: var(--accent); padding: 1px 5px; border-radius: 3px; }
+    .ai-irow { display: flex; gap: 8px; align-items: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px 8px 16px; margin-top: 20px; transition: border-color 0.2s; }
+    .ai-irow:focus-within { border-color: var(--accent-border); }
+    .ai-in { flex: 1; background: transparent; border: none; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none; }
+    .ai-in::placeholder { color: var(--text-dim); }
+    .ai-snd { background: linear-gradient(135deg, var(--accent), var(--cyan)); border: none; color: var(--bg-void); padding: 7px 18px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; box-shadow: 0 0 12px rgba(56,189,248,0.2); }
+    .ai-sugs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+    .ai-sg { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .ai-sg:hover { color: var(--accent); border-color: var(--accent-border); }
+
+    /* CMD PALETTE */
+    .cmd-ov { position: fixed; inset: 0; background: rgba(5,8,16,0.8); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding-top: 15vh; }
+    .cmd-ov.open { display: flex; }
+    .cmd-bx { background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: var(--radius-lg); width: 520px; box-shadow: 0 0 60px rgba(56,189,248,0.08), 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+    .cmd-ir { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .cmd-in { flex: 1; background: transparent; border: none; color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none; font-weight: 500; }
+    .cmd-in::placeholder { color: var(--text-dim); }
+    .cmd-rs { padding: 8px; max-height: 320px; overflow-y: auto; }
+    .cmd-it { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.1s; font-size: 13px; color: var(--text-secondary); }
+    .cmd-it:hover, .cmd-it.sel { background: var(--accent-glow); color: var(--text-primary); }
+
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    @keyframes fu { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<!-- CMD PALETTE -->
+<div class="cmd-ov" id="cmd">
+  <div class="cmd-bx">
+    <div class="cmd-ir"><span style="color:var(--text-dim);">⌕</span><input class="cmd-in" id="cmd-in" placeholder="Search welds, packages, codes, or ask AI..."></div>
+    <div class="cmd-rs" id="cmd-rs">
+      <div class="cmd-it sel"><span style="opacity:0.5;">◈</span> Dashboard</div>
+      <div class="cmd-it"><span style="opacity:0.5;">▤</span> Package Tracker</div>
+      <div class="cmd-it"><span style="opacity:0.5;">⬡</span> Weld Log</div>
+      <div class="cmd-it"><span style="opacity:0.5;">◉</span> NDE Control</div>
+      <div class="cmd-it"><span style="opacity:0.5;">⊚</span> Flange Log</div>
+      <div class="cmd-it"><span style="opacity:0.5;">▧</span> Document Control</div>
+      <div class="cmd-it"><span style="opacity:0.5;">⟁</span> Code Library</div>
+      <div class="cmd-it"><span style="opacity:0.5;">⬢</span> AI Assistant</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-brand"><div class="brand-logo">SM</div><div><div class="brand-name">Sin Miedo AI</div><div class="brand-sub">QC Platform</div></div></div>
+  <div class="job-selector"><span class="job-dot"></span><span class="job-id">J-2026-0847</span><span class="job-client">Marathon</span></div>
+  <div class="ai-status"><div class="ai-pulse">AI</div><div><div class="ai-status-text">Kimi K3.1 Pro</div></div><span class="ai-status-label">Active</span></div>
+  <div class="nav-section">
+    <div class="nav-section-label">Operations</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item" data-page="packages"><span class="nav-icon">▤</span> Packages <span class="nav-badge nb-g">142</span></div>
+    <div class="nav-item" data-page="welds"><span class="nav-icon">⬡</span> Weld Log <span class="nav-badge nb-r">12</span></div>
+    <div class="nav-item" data-page="nde"><span class="nav-icon">◉</span> NDE Control <span class="nav-badge nb-y">8</span></div>
+    <div class="nav-item" data-page="flanges"><span class="nav-icon">⊚</span> Flange Log</div>
+    <div class="nav-item" data-page="docs"><span class="nav-icon">▧</span> Documents <span class="nav-badge nb-b">54</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Field Ops</div>
+    <div class="nav-item" data-page="wire"><span class="nav-icon">⬡</span> Wire Inventory <span class="nav-badge nb-y" id="nav-wire-cnt">0</span></div>
+    <div class="nav-item" data-page="rfis"><span class="nav-icon">◇</span> RFI Tracker</div>
+    <div class="nav-item" data-page="iwr"><span class="nav-icon">▣</span> IWR/AWR</div>
+    <div class="nav-item" data-page="crew"><span class="nav-icon">◎</span> Crew Management</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Intelligence</div>
+    <div class="nav-item" data-page="codes"><span class="nav-icon">⟁</span> Code Library</div>
+    <div class="nav-item" data-page="ai"><span class="nav-icon">⬢</span> AI Assistant</div>
+  </div>
+  <div class="sidebar-footer"><div class="user-card"><div class="user-avatar">FV</div><div><div class="user-name">Frank Vasquez</div><div class="user-role">QC Manager</div></div></div></div>
+</aside>
+
+<div class="main">
+<div class="topbar">
+  <span class="topbar-title" id="pgtitle">Dashboard</span><span class="topbar-sep"></span><span class="topbar-time" id="clock"></span>
+  <div class="search-wrapper"><input class="search-box" type="text" placeholder="Search everything..." id="strig"></div>
+  <div class="topbar-actions"><button class="topbar-btn">↗ Export</button><button class="topbar-btn primary" id="abtn">+ New Package</button></div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">AI Daily Brief — Day Shift</span><span class="aptag">Auto-Generated</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--red);"></div><div><strong>3 weld repairs outstanding</strong> in U-300 (W-3847, W-3851, W-3860). J. Hernandez has capacity — recommend assigning re-welds to morning shift.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--yellow);"></div><div><strong>FLG-U300-018 PCC-1 hold</strong> — 8" 1500# ring joint missing JTR. On the critical path for U-300 turnover.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--accent);"></div><div><strong>NDE-0291 PAUT scan</strong> flagged 2 indications on W-4100. AI confidence: <span class="cm"><span class="cmb"><span class="cmf" style="width:87%;background:var(--accent);"></span></span><span style="color:var(--accent);">87%</span></span> — probable linear indication at 0.8T. Needs Level III.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--green);"></div><div><strong>U-100 turnover</strong> 98% complete. 2 remaining: hydro report + E-101 as-built ISO. Ready by EOD.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total Packages</div><div class="kpi-value vb">142</div><div class="kpi-sub">Marathon Galveston Bay</div><div class="kpi-bar"><div class="kpi-bar-fill" style="width:67%;background:var(--accent);"></div></div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Closed Out</div><div class="kpi-value vg">95</div><div class="kpi-sub">66.9% complete</div><div class="kpi-bar"><div class="kpi-bar-fill" style="width:67%;background:var(--green);"></div></div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">In Progress</div><div class="kpi-value vy">35</div><div class="kpi-sub">14 with outstanding NDE</div><div class="kpi-bar"><div class="kpi-bar-fill" style="width:25%;background:var(--yellow);"></div></div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">On Hold</div><div class="kpi-value vr">12</div><div class="kpi-sub">3 repairs · 9 doc holds</div><div class="kpi-bar"><div class="kpi-bar-fill" style="width:8%;background:var(--red);"></div></div></div>
+    <div class="kpi cc"><div class="kpi-glow" style="background:var(--cyan);"></div><div class="kpi-label">AI Reviews Today</div><div class="kpi-value vc">14</div><div class="kpi-sub">2 flagged for Level III</div><div class="kpi-bar"><div class="kpi-bar-fill" style="width:85%;background:var(--cyan);"></div></div></div>
+  </div>
+  <div class="g23">
+    <div class="cb2"><div class="ctl"><span>Progress by Unit</span><span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-family:var(--font-mono);">Live</span></div>
+      <div class="bchart">
+        <div class="bcol"><div class="bval">85%</div><div class="bar2" style="height:85%;background:linear-gradient(to top,var(--accent-dim),var(--accent));"></div><div class="blbl">U-100</div></div>
+        <div class="bcol"><div class="bval">72%</div><div class="bar2" style="height:72%;background:linear-gradient(to top,var(--accent-dim),var(--accent));"></div><div class="blbl">U-200</div></div>
+        <div class="bcol"><div class="bval">58%</div><div class="bar2" style="height:58%;background:linear-gradient(to top,rgba(234,179,8,0.2),var(--yellow));"></div><div class="blbl">U-300</div></div>
+        <div class="bcol"><div class="bval">91%</div><div class="bar2" style="height:91%;background:linear-gradient(to top,rgba(34,197,94,0.2),var(--green));"></div><div class="blbl">U-400</div></div>
+        <div class="bcol"><div class="bval">43%</div><div class="bar2" style="height:43%;background:linear-gradient(to top,rgba(249,115,22,0.2),var(--orange));"></div><div class="blbl">U-500</div></div>
+        <div class="bcol"><div class="bval">67%</div><div class="bar2" style="height:67%;background:linear-gradient(to top,var(--accent-dim),var(--accent));"></div><div class="blbl">U-600</div></div>
+        <div class="bcol"><div class="bval">35%</div><div class="bar2" style="height:35%;background:linear-gradient(to top,rgba(239,68,68,0.2),var(--red));"></div><div class="blbl">U-700</div></div>
+        <div class="bcol"><div class="bval">78%</div><div class="bar2" style="height:78%;background:linear-gradient(to top,var(--accent-dim),var(--accent));"></div><div class="blbl">U-800</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="hcard" style="margin-bottom:12px;"><div class="htitle">☀ Day → Night Handover</div><div class="hitem">3 weld repairs pending U-300 — W-3847 re-weld started</div><div class="hitem">NDE-0291 PAUT needs Level III sign-off</div><div class="hitem">FLG-U300-018 JTR still missing</div><div class="hitem">U-100 turnover 98% — hydro report expected overnight</div></div>
+      <div class="cb2"><div class="ctl">NDE Methods — This Week</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;text-align:center;padding:8px;background:var(--accent-glow);border-radius:8px;border:1px solid var(--border);"><div style="font-size:20px;font-weight:900;color:var(--accent);font-family:var(--font-mono);">48</div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:1px;">RT</div></div>
+          <div style="flex:1;text-align:center;padding:8px;background:var(--cyan-glow);border-radius:8px;border:1px solid var(--border);"><div style="font-size:20px;font-weight:900;color:var(--cyan);font-family:var(--font-mono);">36</div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:1px;">PAUT</div></div>
+          <div style="flex:1;text-align:center;padding:8px;background:var(--violet-glow);border-radius:8px;border:1px solid var(--border);"><div style="font-size:20px;font-weight:900;color:var(--violet);font-family:var(--font-mono);">22</div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:1px;">UT</div></div>
+          <div style="flex:1;text-align:center;padding:8px;background:var(--green-glow);border-radius:8px;border:1px solid var(--border);"><div style="font-size:20px;font-weight:900;color:var(--green);font-family:var(--font-mono);">31</div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:1px;">MT/PT</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="cb2"><div class="ctl">Live Activity</div><div class="feed">
+      <div class="fi"><div class="fdot" style="background:var(--green);"></div><div><div class="ftxt"><strong>PKG-U100-042</strong> closed out by R. Martinez</div><div class="ftime">3m ago</div></div></div>
+      <div class="fi"><div class="fdot" style="background:var(--violet);"></div><div><div class="ftxt"><strong>AI Review:</strong> NDE-0291 PAUT — 2 indications, 87% confidence</div><div class="ftime">12m ago</div></div></div>
+      <div class="fi"><div class="fdot" style="background:var(--red);"></div><div><div class="ftxt"><strong>W-3847</strong> RT rejected — incomplete fusion, repair assigned</div><div class="ftime">28m ago</div></div></div>
+      <div class="fi"><div class="fdot" style="background:var(--yellow);"></div><div><div class="ftxt"><strong>FLG-U300-018</strong> PCC-1 hold — torque record incomplete</div><div class="ftime">45m ago</div></div></div>
+      <div class="fi"><div class="fdot" style="background:var(--accent);"></div><div><div class="ftxt"><strong>AI:</strong> Shift handover generated — 4 unresolved items</div><div class="ftime">1h ago</div></div></div>
+    </div></div>
+    <div class="tc" style="margin:0;"><div class="th"><span class="tt">Critical Items</span><span class="tcnt">5 urgent</span></div>
+      <table><thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Age</th></tr></thead><tbody>
+        <tr><td class="tid">W-3847</td><td>Repair</td><td><span class="b bh">Rejected</span></td><td>2d</td></tr>
+        <tr><td class="tid">NDE-0291</td><td>PAUT</td><td><span class="b ba">AI Review</span></td><td>28m</td></tr>
+        <tr><td class="tid">FLG-018</td><td>Flange</td><td><span class="b bh">PCC-1</span></td><td>4h</td></tr>
+        <tr><td class="tid">PKG-U500</td><td>Doc</td><td><span class="b bp">Waiting</span></td><td>1d</td></tr>
+        <tr><td class="tid">W-4102</td><td>NDE</td><td><span class="b bo">Requested</span></td><td>6h</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- PACKAGES -->
+<div class="page" id="page-packages">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Package Intelligence</span><span class="aptag">Live</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--green);"></div><div><strong>U-400 on track</strong> for early turnover — 91% complete, zero holds.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--red);"></div><div><strong>U-700 at risk</strong> — 35% with 12 days remaining. 8 packages need NDE clearance.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total</div><div class="kpi-value vb">142</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Closed</div><div class="kpi-value vg">95</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">In Progress</div><div class="kpi-value vy">35</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">On Hold</div><div class="kpi-value vr">12</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">QC Packages</span><span class="tcnt">142</span><div class="tf"><button class="fb on">All</button><button class="fb">Open</button><button class="fb">Closed</button><button class="fb">Hold</button></div></div>
+    <table><thead><tr><th>Package</th><th>Unit</th><th>Equipment</th><th>Inspector</th><th>AI</th><th>Status</th><th>Progress</th></tr></thead><tbody>
+      <tr><td class="tid">PKG-U100-001</td><td>U-100</td><td class="tdb">Exchanger E-101</td><td>R. Martinez</td><td><span class="b bd">Clear</span></td><td><span class="b bd">Closed</span></td><td><div class="pi"><div class="pt"><div class="pf" style="width:100%;background:var(--green);"></div></div><span class="pp" style="color:var(--green);">100%</span></div></td></tr>
+      <tr><td class="tid">PKG-U200-008</td><td>U-200</td><td class="tdb">Column T-201</td><td>J. Hernandez</td><td><span class="b ba">Reviewing</span></td><td><span class="b bp">In Prog</span></td><td><div class="pi"><div class="pt"><div class="pf" style="width:72%;background:var(--yellow);"></div></div><span class="pp" style="color:var(--yellow);">72%</span></div></td></tr>
+      <tr><td class="tid">PKG-U300-015</td><td>U-300</td><td class="tdb">Drum D-301</td><td>M. Singh</td><td><span class="b bh">3 Issues</span></td><td><span class="b bh">Hold</span></td><td><div class="pi"><div class="pt"><div class="pf" style="width:45%;background:var(--red);"></div></div><span class="pp" style="color:var(--red);">45%</span></div></td></tr>
+      <tr><td class="tid">PKG-U400-003</td><td>U-400</td><td class="tdb">Heater H-401</td><td>R. Garcia</td><td><span class="b bd">Clear</span></td><td><span class="b bd">Closed</span></td><td><div class="pi"><div class="pt"><div class="pf" style="width:100%;background:var(--green);"></div></div><span class="pp" style="color:var(--green);">100%</span></div></td></tr>
+      <tr><td class="tid">PKG-U700-003</td><td>U-700</td><td class="tdb">Vessel V-701</td><td>J. Hernandez</td><td><span class="b bo">Scanning</span></td><td><span class="b bo">Open</span></td><td><div class="pi"><div class="pt"><div class="pf" style="width:15%;background:var(--accent);"></div></div><span class="pp" style="color:var(--accent);">15%</span></div></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- WELD LOG -->
+<div class="page" id="page-welds">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Weld Pattern Analysis</span><span class="aptag">Active</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--red);"></div><div><strong>J. Hernandez</strong> — 3 RT rejections this week, all root IF on 6" Sch 80. Recommend re-qual review per ASME IX QW-322.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--green);"></div><div><strong>C. Ramirez</strong> — 47 welds, zero rejections. 100% first-pass on SS GTAW. Top performer.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total Welds</div><div class="kpi-value vb">1,847</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Accepted</div><div class="kpi-value vg">1,714</div><div class="kpi-sub">92.8% acceptance</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">Rejected</div><div class="kpi-value vr">12</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Awaiting NDE</div><div class="kpi-value vy">121</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">Weld Log</span><span class="tcnt">1,847</span><div class="tf"><button class="fb on">All</button><button class="fb">Rejected</button><button class="fb">Pending</button><button class="fb">Repairs</button></div></div>
+    <table><thead><tr><th>Weld</th><th>Welder</th><th>WPS</th><th>Size</th><th>VT</th><th>NDE</th><th>AI</th><th>Status</th></tr></thead><tbody>
+      <tr><td class="tid">W-3847</td><td class="tdb">J. Hernandez</td><td class="tmono">WPS-CS-001</td><td>6" Sch 80</td><td><span class="b bd">Pass</span></td><td>RT</td><td><span class="b bh">Pattern</span></td><td><span class="b bh">Rejected</span></td></tr>
+      <tr><td class="tid">W-4098</td><td class="tdb">C. Ramirez</td><td class="tmono">WPS-SS-003</td><td>4" Sch 40</td><td><span class="b bd">Pass</span></td><td>PAUT</td><td><span class="b bd">Clear</span></td><td><span class="b bd">Accepted</span></td></tr>
+      <tr><td class="tid">W-4100</td><td class="tdb">M. Torres</td><td class="tmono">WPS-CS-002</td><td>8" Sch 160</td><td><span class="b bd">Pass</span></td><td>RT</td><td><span class="b ba">Review</span></td><td><span class="b bpn">Pending</span></td></tr>
+      <tr><td class="tid">W-4101</td><td class="tdb">A. Lopez</td><td class="tmono">WPS-CR-001</td><td>3" Sch 40</td><td><span class="b bp">Sched</span></td><td>UT</td><td>—</td><td><span class="b bo">Open</span></td></tr>
+      <tr><td class="tid">W-4102</td><td class="tdb">J. Hernandez</td><td class="tmono">WPS-CS-001</td><td>10" Sch 80</td><td><span class="b bd">Pass</span></td><td>RT</td><td><span class="b ba">Queued</span></td><td><span class="b bo">Requested</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- NDE CONTROL -->
+<div class="page" id="page-nde">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">NDE AI Review Engine</span><span class="aptag">Machine Vision</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--violet);"></div><div><strong>NDE-0291 PAUT complete.</strong> Linear indication at 0.8T, 12mm. Exceeds <code>ASME VIII Div 1 UW-51(b)</code>. Level III required.
+    <div style="margin-top:6px;"><span class="cm"><span style="color:var(--text-muted);margin-right:4px;">Confidence:</span><span class="cmb" style="width:60px;"><span class="cmf" style="width:87%;background:var(--accent);"></span></span><span style="color:var(--accent);">87%</span></span></div></div></div>
+  </div>
+  <div class="sv" style="margin-bottom:20px;"><div class="svh"><span class="svl">NDE-0291 · PAUT SCAN · W-4100</span><span style="font-size:10px;color:var(--violet);font-weight:700;">AI ANALYZED</span><span class="svm">8" Sch 160 · ASME V Art. 4</span></div>
+    <div class="sg" id="scan"></div>
+    <div class="sfinds"><div class="sfnd r"><div class="sfl" style="color:var(--red);">Indication #1</div><div class="sfv">Linear · 12mm · 0.8T · Sector 7-9</div></div><div class="sfnd r"><div class="sfl" style="color:var(--red);">Indication #2</div><div class="sfv">Volumetric · 3mm · 0.4T · Sector 18</div></div><div class="sfnd g"><div class="sfl" style="color:var(--green);">Remaining</div><div class="sfv">Clear — no recordable indications</div></div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total Exams</div><div class="kpi-value vb">687</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Accepted</div><div class="kpi-value vg">648</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">Rejected</div><div class="kpi-value vr">31</div><div class="kpi-sub">4.5% rate</div></div>
+    <div class="kpi cv"><div class="kpi-glow" style="background:var(--violet);"></div><div class="kpi-label">AI Reviewed</div><div class="kpi-value vv">583</div><div class="kpi-sub">84.9% coverage</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">NDE Exams</span><span class="tcnt">687</span><div class="tf"><button class="fb on">All</button><button class="fb">RT</button><button class="fb">PAUT</button><button class="fb">UT</button><button class="fb">MT/PT</button></div></div>
+    <table><thead><tr><th>NDE</th><th>Weld</th><th>Method</th><th>Tech</th><th>Code</th><th>AI</th><th>Confidence</th><th>Status</th></tr></thead><tbody>
+      <tr><td class="tid">NDE-0291</td><td>W-4100</td><td class="tdb">PAUT</td><td>M. Singh</td><td class="tmono">V Art.4</td><td><span class="b ba">2 Ind.</span></td><td><span class="cm"><span class="cmb"><span class="cmf" style="width:87%;background:var(--accent);"></span></span><span style="color:var(--accent);">87%</span></span></td><td><span class="b ba">AI Review</span></td></tr>
+      <tr><td class="tid">NDE-0290</td><td>W-3847</td><td class="tdb">RT</td><td>K. Chen</td><td class="tmono">V Art.2</td><td><span class="b bh">IF</span></td><td><span class="cm"><span class="cmb"><span class="cmf" style="width:95%;background:var(--red);"></span></span><span style="color:var(--red);">95%</span></span></td><td><span class="b bh">Rejected</span></td></tr>
+      <tr><td class="tid">NDE-0289</td><td>W-4098</td><td class="tdb">PAUT</td><td>M. Singh</td><td class="tmono">V Art.4</td><td><span class="b bd">Clear</span></td><td><span class="cm"><span class="cmb"><span class="cmf" style="width:96%;background:var(--green);"></span></span><span style="color:var(--green);">96%</span></span></td><td><span class="b bd">Accepted</span></td></tr>
+      <tr><td class="tid">NDE-0288</td><td>W-4095</td><td class="tdb">UT</td><td>D. Patel</td><td class="tmono">V Art.5</td><td><span class="b bd">Clear</span></td><td><span class="cm"><span class="cmb"><span class="cmf" style="width:92%;background:var(--green);"></span></span><span style="color:var(--green);">92%</span></span></td><td><span class="b bd">Accepted</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- FLANGES -->
+<div class="page" id="page-flanges">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Flange Integrity</span><span class="aptag">PCC-1</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--red);"></div><div><strong>12 flanges missing JTR.</strong> Per ASME PCC-1 these cannot enter hydrotest boundary. Critical path: U-300 hydrotest delayed.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total</div><div class="kpi-value vb">324</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Complete</div><div class="kpi-value vg">281</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Pending</div><div class="kpi-value vy">31</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">PCC-1 Holds</div><div class="kpi-value vr">12</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">Flange Log</span><span class="tcnt">324</span><div class="tf"><button class="fb on">All</button><button class="fb">Pending</button><button class="fb">Holds</button></div></div>
+    <table><thead><tr><th>Flange</th><th>Unit</th><th>Size/Rating</th><th>Gasket</th><th>Torque</th><th>JTR</th><th>Status</th></tr></thead><tbody>
+      <tr><td class="tid">FLG-U100-001</td><td>U-100</td><td class="tdb">6" 900#</td><td>SW-CG-316</td><td class="tmono">590 ft-lb</td><td><span class="b bd">Signed</span></td><td><span class="b bd">Complete</span></td></tr>
+      <tr><td class="tid">FLG-U300-018</td><td>U-300</td><td class="tdb">8" 1500#</td><td>RJ-321</td><td style="color:var(--text-dim);">—</td><td><span class="b bh">Missing</span></td><td><span class="b bh">PCC-1 Hold</span></td></tr>
+      <tr><td class="tid">FLG-U500-009</td><td>U-500</td><td class="tdb">10" 300#</td><td>SW-CG-316</td><td style="color:var(--text-dim);">—</td><td><span class="b bpn">Pending</span></td><td><span class="b bpn">Awaiting</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div class="page" id="page-docs">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Document Intelligence</span><span class="aptag">Auto-Audit</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--yellow);"></div><div><strong>54 docs overdue.</strong> U-100 is 2 short: hydro report + E-101 as-built ISO.</div></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--green);"></div><div><strong>Auto-generated:</strong> Daily doc status, missing items, and priority queue ready for review.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total</div><div class="kpi-value vb">2,341</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Current</div><div class="kpi-value vg">2,198</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Pending</div><div class="kpi-value vy">89</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">Overdue</div><div class="kpi-value vr">54</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">Documents</span><span class="tcnt">2,341</span><div class="tf"><button class="fb on">All</button><button class="fb">Drawings</button><button class="fb">ITPs</button><button class="fb">WPS</button><button class="fb">Reports</button></div></div>
+    <table><thead><tr><th>Doc</th><th>Title</th><th>Type</th><th>Rev</th><th>AI</th><th>Status</th></tr></thead><tbody>
+      <tr><td class="tid">DWG-U100-001</td><td class="tdb">E-101 Shell Side ISO</td><td>Isometric</td><td class="tmono">R3</td><td><span class="b bd">Verified</span></td><td><span class="b bd">Current</span></td></tr>
+      <tr><td class="tid">ITP-U200-001</td><td class="tdb">T-201 Column Repad ITP</td><td>ITP</td><td class="tmono">R1</td><td><span class="b bd">Verified</span></td><td><span class="b bd">Approved</span></td></tr>
+      <tr><td class="tid">RPT-NDE-0290</td><td class="tdb">W-3847 RT — Rejected</td><td>NDE Report</td><td class="tmono">R0</td><td><span class="b bh">Action</span></td><td><span class="b bh">Action Req</span></td></tr>
+      <tr><td class="tid">PKG-CLO-U100</td><td class="tdb">U-100 Turnover Package</td><td>Closeout</td><td class="tmono">Draft</td><td><span class="b ba">Auditing</span></td><td><span class="b bp">In Review</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- WIRE INVENTORY -->
+<div class="page" id="page-wire">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Wire & Filler Metal Intelligence</span><span class="aptag">Inventory</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--yellow);"></div><div><strong>Inventory audit recommended.</strong> AI detected potential shortages based on current weld production rate vs. onsite stock.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total Entries</div><div class="kpi-value vb">0</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Total Ordered (lbs)</div><div class="kpi-value vg">0</div></div>
+    <div class="kpi cc"><div class="kpi-glow" style="background:var(--cyan);"></div><div class="kpi-label">Total Onsite (lbs)</div><div class="kpi-value vc">0</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">Needs Restock</div><div class="kpi-value vr">0</div><div class="kpi-sub">Below 20% threshold</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">Wire Inventory</span><span class="tcnt">0</span><div class="tf"><button class="fb on">All</button><button class="fb">GTAW</button><button class="fb">SMAW</button><button class="fb">FCAW</button></div></div>
+    <table><thead><tr><th>Filler Metal</th><th>Process</th><th>Application</th><th>Size</th><th>Ordered (lbs)</th><th>Onsite (lbs)</th><th>Stock %</th><th>Last Audit</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- RFI TRACKER -->
+<div class="page" id="page-rfis">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">RFI Intelligence</span><span class="aptag">Tracking</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--accent);"></div><div><strong>RFI response tracking active.</strong> AI monitors open RFIs and flags items approaching SLA deadlines.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total RFIs</div><div class="kpi-value vb">0</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Open</div><div class="kpi-value vy">0</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Closed</div><div class="kpi-value vg">0</div></div>
+    <div class="kpi cr"><div class="kpi-glow" style="background:var(--red);"></div><div class="kpi-label">Pending</div><div class="kpi-value vr">0</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">RFI Log</span><span class="tcnt">0</span><div class="tf"><button class="fb on">All</button><button class="fb">Open</button><button class="fb">Closed</button><button class="fb">Pending</button></div></div>
+    <table><thead><tr><th>RFI #</th><th>WO</th><th>ETS</th><th>Date</th><th>Asked By</th><th>Subject</th><th>Status</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- IWR/AWR -->
+<div class="page" id="page-iwr">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">IWR/AWR Work Order Intelligence</span><span class="aptag">Job Plans</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--green);"></div><div><strong>Work order tracking active.</strong> AI correlates AWR scope with weld and NDE requirements automatically.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total AWRs</div><div class="kpi-value vb">0</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">Sold</div><div class="kpi-value vg">0</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Remaining</div><div class="kpi-value vy">0</div></div>
+    <div class="kpi cv"><div class="kpi-glow" style="background:var(--violet);"></div><div class="kpi-label">Welding Required</div><div class="kpi-value vv">0</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">IWR/AWR Log</span><span class="tcnt">0</span><div class="tf"><button class="fb on">All</button><button class="fb">Sold</button><button class="fb">Welding</button><button class="fb">NBIC</button></div></div>
+    <table><thead><tr><th>AWR #</th><th>RR #</th><th>Unit</th><th>Equipment</th><th>Welding</th><th>NBIC</th><th>Hydro</th><th>Status</th><th>Description</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- CREW MANAGEMENT -->
+<div class="page" id="page-crew">
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Crew & Staffing Intelligence</span><span class="aptag">Live</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--accent);"></div><div><strong>Crew roster synced.</strong> AI tracks certifications, shift coverage, and flags understaffed areas.</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi cb"><div class="kpi-glow" style="background:var(--accent);"></div><div class="kpi-label">Total Crew</div><div class="kpi-value vb">0</div></div>
+    <div class="kpi cy"><div class="kpi-glow" style="background:var(--yellow);"></div><div class="kpi-label">Day Shift</div><div class="kpi-value vy">0</div></div>
+    <div class="kpi cv"><div class="kpi-glow" style="background:var(--violet);"></div><div class="kpi-label">Night Shift</div><div class="kpi-value vv">0</div></div>
+    <div class="kpi cg"><div class="kpi-glow" style="background:var(--green);"></div><div class="kpi-label">QC Personnel</div><div class="kpi-value vg">0</div></div>
+  </div>
+  <div class="tc"><div class="th"><span class="tt">Crew Roster</span><span class="tcnt">0</span><div class="tf"><button class="fb on">All</button><button class="fb">Day</button><button class="fb">Night</button><button class="fb">QC</button></div></div>
+    <table><thead><tr><th>Name</th><th>Role</th><th>Shift</th><th>Phone</th><th>Unit/Area</th><th>Status</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- CODE LIBRARY -->
+<div class="page" id="page-codes">
+  <!-- Code Search Bar -->
+  <div style="margin-bottom:20px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="code-search-input" type="text" placeholder="Search ASME B31.3, Section VIII, QC manuals…  (e.g. preheat, radiography, PWHT)"
+        style="flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:14px;outline:none;font-family:inherit;"
+        onkeydown="if(event.key==='Enter')searchCodes()">
+      <button onclick="searchCodes()" style="background:var(--accent);color:#000;border:none;padding:12px 20px;border-radius:10px;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">⟁ Search</button>
+    </div>
+    <div id="code-filter-chips" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="code-chip active" data-std="all" onclick="setCodeFilter('all',this)" style="background:var(--accent);color:#000;border:none;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;">All Standards</button>
+      <button class="code-chip" data-std="b31.3" onclick="setCodeFilter('b31.3',this)" style="background:var(--card);color:var(--accent);border:1px solid var(--accent-border);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">ASME B31.3</button>
+      <button class="code-chip" data-std="section-viii" onclick="setCodeFilter('section-viii',this)" style="background:var(--card);color:var(--cyan);border:1px solid rgba(6,182,212,0.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Section VIII</button>
+      <button class="code-chip" data-std="quick-references" onclick="setCodeFilter('quick-references',this)" style="background:var(--card);color:var(--green);border:1px solid rgba(34,197,94,0.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Quick References</button>
+      <button class="code-chip" data-std="qc-manuals" onclick="setCodeFilter('qc-manuals',this)" style="background:var(--card);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">QC Manuals</button>
+    </div>
+  </div>
+
+  <!-- Standards Info (loaded dynamically) -->
+  <div id="code-standards-info" style="margin-bottom:16px;"></div>
+
+  <!-- Search Results -->
+  <div id="code-search-results" style="margin-bottom:24px;"></div>
+
+  <!-- Original Reference Cards -->
+  <div class="ap"><div class="aph"><div class="api">AI</div><span class="apt">Code Intelligence Engine</span><span class="aptag">Searchable</span></div>
+    <div class="ai-ins"><div class="ai-dot" style="background:var(--accent);"></div><div>Search any code requirement by keyword. Returns exact line matches with context from the ingested ASME B31.3 (2020) and Section VIII Div 1 (2021) codebooks.</div></div>
+  </div>
+  <div class="cgrid">
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div><div class="cctag" style="background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent-border);">ASME</div><h3>Boiler & Pressure Vessel Code</h3><p>BPVC I–XII, B31.1, B31.3, B16. Material specs through weld qualification.</p></div>
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);"></div><div class="cctag" style="background:var(--cyan-glow);color:var(--cyan);border:1px solid rgba(6,182,212,0.2);">NBIC</div><h3>National Board Inspection</h3><p>Installation, inspection, repairs, alterations. R-stamp compliance.</p></div>
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);"></div><div class="cctag" style="background:var(--green-glow);color:var(--green);border:1px solid rgba(34,197,94,0.2);">API</div><h3>Refinery Inspection</h3><p>510, 570, 653, 577, 579. Pressure vessels, piping, tanks.</p></div>
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);"></div><div class="cctag" style="background:var(--orange-glow);color:var(--orange);border:1px solid rgba(249,115,22,0.2);">AWS</div><h3>Welding Standards</h3><p>D1.1, D1.6. Welder qual, WPS/PQR, acceptance criteria.</p></div>
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--yellow),transparent);"></div><div class="cctag" style="background:var(--yellow-glow);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);">PCC-1</div><h3>Flange & Joint Integrity</h3><p>Bolt-up, torque values, gasket selection, joint integrity.</p></div>
+    <div class="ccard"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);"></div><div class="cctag" style="background:var(--red-glow);color:var(--red);border:1px solid rgba(239,68,68,0.2);">NDE</div><h3>Examination Standards</h3><p>ASME V, ASTM, ASNT. RT, PAUT, UT, MT, PT, VT, TOFD.</p></div>
+  </div>
+</div>
+
+<!-- AI ASSISTANT -->
+<div class="page" id="page-ai">
+  <div style="max-width:720px;">
+    <div class="ai-msg"><div class="ai-av">AI</div><div class="ai-bub"><strong>Good morning, Frank.</strong> Daily brief for J-2026-0847:<br><br><strong>3 weld repairs</strong> outstanding in U-300. J. Hernandez has the re-weld on W-3847. I flagged a pattern — 3 RT rejections on the same WPS, all root pass IF.<br><br><strong>NDE-0291 PAUT</strong> — 2 indications exceeding <code>ASME VIII Div 1 UW-51(b)</code>. M. Singh notified for Level III.<br><br><strong>U-100 turnover</strong> 98% ready. Hydro report + as-built ISO remaining. Should close by EOD.<br><br>What do you need?</div></div>
+    <div id="ai-chat-results"></div>
+    <div class="ai-irow"><input id="ai-chat-input" class="ai-in" type="text" placeholder="Ask about codes, welds, packages..." onkeydown="if(event.key==='Enter')sendAiQuery()"><button class="ai-snd" onclick="sendAiQuery()">Send</button></div>
+    <div class="ai-sugs">
+      <button class="ai-sg" onclick="fillAiQuery(this)">"ASME B31.3 preheat requirements?"</button>
+      <button class="ai-sg" onclick="fillAiQuery(this)">"Section VIII radiography acceptance"</button>
+      <button class="ai-sg" onclick="fillAiQuery(this)">"PWHT temperature requirements"</button>
+      <button class="ai-sg" onclick="fillAiQuery(this)">"Hydrostatic test pressure B31.3"</button>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+// BG CANVAS
+const c=document.getElementById('bg-canvas'),x=c.getContext('2d');let W,H;
+function rz(){W=c.width=innerWidth;H=c.height=innerHeight;}rz();addEventListener('resize',rz);
+const ds=[];for(let i=0;i<40;i++)ds.push({x:Math.random()*2e3,y:Math.random()*1200,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,s:Math.random()*2+1,p:Math.random()*6.28});
+function bg(){x.clearRect(0,0,W,H);x.strokeStyle='rgba(56,189,248,0.015)';x.lineWidth=.5;for(let i=0;i<W;i+=60){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}for(let i=0;i<H;i+=60){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}
+for(let d of ds){d.x+=d.vx;d.y+=d.vy;d.p+=.015;if(d.x<-20)d.x=W+20;if(d.x>W+20)d.x=-20;if(d.y<-20)d.y=H+20;if(d.y>H+20)d.y=-20;let s=d.s+Math.sin(d.p)*.8;x.beginPath();x.arc(d.x,d.y,s,0,6.28);x.fillStyle=`rgba(56,189,248,${.15+Math.sin(d.p)*.08})`;x.fill();}
+for(let i=0;i<ds.length;i++)for(let j=i+1;j<ds.length;j++){let dx=ds[i].x-ds[j].x,dy=ds[i].y-ds[j].y,d2=Math.sqrt(dx*dx+dy*dy);if(d2<200){x.beginPath();x.moveTo(ds[i].x,ds[i].y);x.lineTo(ds[j].x,ds[j].y);x.strokeStyle=`rgba(56,189,248,${.04*(1-d2/200)})`;x.lineWidth=.5;x.stroke();}}
+requestAnimationFrame(bg);}bg();
+
+// SCAN
+const sc=document.getElementById('scan');if(sc){for(let c2=0;c2<24;c2++){const col=document.createElement('div');col.className='sgc';for(let r=0;r<12;r++){const cl=document.createElement('div');cl.className='sgcl';let d1=c2>=6&&c2<=8&&r>=8&&r<=10,d2=c2===17&&r>=4&&r<=5;if(d1){cl.style.background=`rgba(239,68,68,${.7+Math.random()*.3})`;}else if(d2){cl.style.background=`rgba(249,115,22,${.5+Math.random()*.3})`;}else{cl.style.background=`hsla(${180+Math.random()*40},80%,50%,${Math.random()*.15+.02})`;}col.appendChild(cl);}sc.appendChild(col);}}
+
+// NAV
+const ni=document.querySelectorAll('.nav-item'),pp=document.querySelectorAll('.page'),pt=document.getElementById('pgtitle'),ab=document.getElementById('abtn');
+const ts={dashboard:'Dashboard',packages:'Package Tracker',welds:'Weld Log',nde:'NDE Control',flanges:'Flange Management',docs:'Document Control',wire:'Wire Inventory',rfis:'RFI Tracker',iwr:'IWR/AWR Management',crew:'Crew Management',codes:'Code Library',ai:'AI Assistant'};
+const as2={dashboard:'+ New Package',packages:'+ New Package',welds:'+ Log Weld',nde:'+ NDE Request',flanges:'+ Add Flange',docs:'+ Upload Doc',wire:'+ New Wire Entry',rfis:'+ New RFI',iwr:'+ New AWR',crew:'+ Add Crew',codes:'Search Codes',ai:'New Thread'};
+ni.forEach(i=>{i.addEventListener('click',()=>{const p=i.dataset.page;ni.forEach(n=>n.classList.remove('active'));i.classList.add('active');pp.forEach(pg=>{pg.classList.remove('active');});const t=document.getElementById('page-'+p);t.classList.add('active');t.style.animation='none';t.offsetHeight;t.style.animation='fu 0.3s ease forwards';pt.textContent=ts[p]||'Dashboard';ab.textContent=as2[p]||'+ New';});});
+
+// FILTERS
+document.querySelectorAll('.tf').forEach(g=>{g.querySelectorAll('.fb').forEach(b=>{b.addEventListener('click',()=>{g.querySelectorAll('.fb').forEach(x2=>x2.classList.remove('on'));b.classList.add('on');});});});
+
+// CMD
+const cm=document.getElementById('cmd'),ci=document.getElementById('cmd-in'),st=document.getElementById('strig');
+st.addEventListener('focus',e=>{e.target.blur();cm.classList.add('open');ci.focus();});
+addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();cm.classList.toggle('open');if(cm.classList.contains('open'))ci.focus();}if(e.key==='Escape')cm.classList.remove('open');});
+cm.addEventListener('click',e=>{if(e.target===cm)cm.classList.remove('open');});
+
+// CLOCK
+function uc(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}uc();setInterval(uc,1e3);
+
+// GSAP
+gsap.from('.kpi',{opacity:0,y:12,duration:.4,stagger:.06,ease:'power2.out',delay:.1});
+gsap.from('.bar2',{height:0,duration:1.2,stagger:.06,ease:'power2.out',delay:.3});
+gsap.from('.ap',{opacity:0,y:-10,duration:.5,ease:'power2.out'});
+gsap.from('.fi',{opacity:0,x:-10,duration:.3,stagger:.08,ease:'power2.out',delay:.5});
+</script>
+<script src="/app.js"></script>
+<script src="/modals.js"></script>
+</body>
+</html>
